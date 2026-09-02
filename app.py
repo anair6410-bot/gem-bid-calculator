@@ -3,19 +3,58 @@ import pandas as pd
 from io import BytesIO
 
 st.set_page_config(page_title="GeM Bid Costing", page_icon="🇮🇳", layout="wide")
-st.title("🇮🇳 GeM Bid Costing Calculator - Desktop Computers")
-st.caption("BID 7936262 Logic - Grand Total 76,464")
+st.title("🇮🇳 GeM Bid Costing Calculator")
+st.caption("BID 7936262 - With Department & Location Dropdown")
 
-# Sidebar - Bid Details
 with st.sidebar:
     st.header("📋 Bid Details")
     bid_no = st.text_input("GEM BID NO", "GEM/2026/B/7936262")
-    dept = st.text_input("Department", "DEPT OF FINANCIAL SERVICES")
+
+    # --- DEPARTMENT DROPDOWN WITH MINISTRY / BANKS / ARMED FORCES ---
+    dept = st.selectbox(
+        "🏛️ Select Department / Ministry",
+        [
+            "--- MINISTRIES ---",
+            "DEPT OF FINANCIAL SERVICES",
+            "MINISTRY OF FINANCE",
+            "MINISTRY OF DEFENCE",
+            "MINISTRY OF HOME AFFAIRS",
+            "MINISTRY OF EDUCATION",
+            "MINISTRY OF HEALTH AND FAMILY WELFARE",
+            "MINISTRY OF RAILWAYS",
+            "MINISTRY OF ELECTRONICS AND IT",
+            "MINISTRY OF EXTERNAL AFFAIRS",
+            "--- BANKS & PSU ---",
+            "STATE BANK OF INDIA (SBI)",
+            "PUNJAB NATIONAL BANK (PNB)",
+            "BANK OF BARODA (BOB)",
+            "CANARA BANK",
+            "BANK OF INDIA",
+            "UNION BANK OF INDIA",
+            "RESERVE BANK OF INDIA (RBI)",
+            "LIC OF INDIA",
+            "--- ARMED FORCES ---",
+            "INDIAN ARMY",
+            "INDIAN NAVY",
+            "INDIAN AIR FORCE",
+            "CRPF",
+            "BSF",
+            "CISF",
+            "ITBP",
+            "DRDO",
+            "OTHER - Type Manually"
+        ]
+    )
+    if dept == "--- MINISTRIES ---" or dept == "--- BANKS & PSU ---" or dept == "--- ARMED FORCES ---":
+        dept = "DEPT OF FINANCIAL SERVICES"
     
-    # LOCATION DROPDOWN
+    if dept == "OTHER - Type Manually":
+        dept = st.text_input("Enter Department Name", "DEPT OF FINANCIAL SERVICES")
+
+    # --- LOCATION DROPDOWN ---
     location = st.selectbox(
         "📍 Select Location",
-        ["DHANBAD", "RANCHI", "JAMSHEDPUR", "BOKARO", "DEOGHAR", "HAZARIBAGH", "KOLKATA", "PATNA", "DELHI", "MUMBAI", "OTHER"],
+        ["DHANBAD", "RANCHI", "JAMSHEDPUR", "BOKARO", "DEOGHAR", "HAZARIBAGH", "KOLKATA", "PATNA", "DELHI", "MUMBAI", "CHENNAI", "BANGALORE", "OTHER"],
         index=0
     )
     if location == "OTHER":
@@ -23,7 +62,6 @@ with st.sidebar:
     
     qty = st.number_input("Quantity", 1, 1000, 65)
 
-# Main Costing
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Component Costing")
@@ -47,23 +85,17 @@ with col2:
     sub_total = total_cost + margin
     gst = int(sub_total * 0.18)
     grand = sub_total + gst
-    
     st.divider()
     st.metric("TOTAL COST", f"Rs. {total_cost}")
     st.metric("SUB TOTAL", f"Rs. {sub_total}")
     st.metric("GST 18%", f"Rs. {gst}")
     st.success(f"### GRAND TOTAL = Rs. {grand}")
-    st.info(f"For {qty} Units at {location} = Rs. {grand*qty:,}")
-    
-    if grand == 76464:
-        st.write("✅ Matched with your paper: 76464")
+    st.info(f"{dept} | {location} | {qty} Units = Rs. {grand*qty:,}")
 
-# Excel Save Section
+# Excel
 st.divider()
-st.subheader(f"📊 Data Preview - {location}")
-
 data = {
-    "Particulars": ["GEM BID NO", "Department", "Location", "Quantity", "TOTAL COST", "Company Margin", "Sub Total", "GST 18%", "GRAND TOTAL (BID PRICE)", "Total Bid Value"],
+    "Particulars": ["GEM BID NO", "Department", "Location", "Qty", "TOTAL COST", "Margin", "Sub Total", "GST", "GRAND TOTAL", "Total Bid Value"],
     "Value": [bid_no, dept, location, qty, total_cost, margin, sub_total, gst, grand, grand*qty]
 }
 df = pd.DataFrame(data)
@@ -76,9 +108,9 @@ def to_excel(df):
     return output.getvalue()
 
 st.download_button(
-    label="📥 Download Excel File",
+    label=f"📥 Download Excel - {location}",
     data=to_excel(df),
-    file_name=f"{location}_{grand}.xlsx",
+    file_name=f"{dept[:10]}_{location}_{grand}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     use_container_width=True
 )
