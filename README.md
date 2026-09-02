@@ -1,0 +1,2 @@
+# gem-bid-calculator
+bid
