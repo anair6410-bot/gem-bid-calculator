@@ -1,8 +1,10 @@
 import streamlit as st
+import pandas as pd
+from io import BytesIO
 
 st.set_page_config(page_title="GeM Bid Costing Calculator", page_icon="🇮🇳", layout="wide")
-st.title("🇮🇳 GeM Bid Costing Calculator - Desktop Computers")
-st.caption("As per your Dhanbad Sheet - BID 7936262")
+st.title("🇮🇳 GeM Bid Costing Calculator")
+st.caption("As per your Dhanbad Sheet - BID 7936262 - With Excel Export")
 
 # Sidebar
 with st.sidebar:
@@ -39,11 +41,35 @@ with col2:
     
     st.divider()
     st.metric("TOTAL COST", f"Rs. {total_cost}")
-    st.metric("SUB TOTAL (with Margin)", f"Rs. {sub_total}")
+    st.metric("SUB TOTAL", f"Rs. {sub_total}")
     st.metric("GST 18%", f"Rs. {gst}")
-    st.success(f"### GRAND TOTAL / BID PRICE = Rs. {grand}")
+    st.success(f"### GRAND TOTAL = Rs. {grand}")
     st.info(f"For {qty} Units = Rs. {grand*qty:,}")
 
-    if grand == 76464:
-        st.balloons()
-        st.write("✅ Matched with your paper: 76464")
+# --- NEW EXCEL SAVE FEATURE ---
+st.divider()
+st.subheader("📥 Save Data to Excel")
+
+# Create DataFrame like your image
+data = {
+    "Particulars": ["GEM BID NO", "Department", "Location", "Qty", "CPU i5 14400", "MB H610", "OS Win11 Pro", "RAM 16GB", "SSD 256GB", "SSD 1TB", "Cabinet", "Monitor", "TPM", "KBD Mouse", "Warranty", "Freight", "Other", "TOTAL COST", "Company Margin", "Sub Total", "GST 18%", "GRAND TOTAL (BID PRICE)", "Total Bid Value"],
+    "Value / Cost": [bid_no, dept, location, qty, cpu, mb, os_cost, ram, ssd1, ssd2, cabinet, monitor, tpm, kbd, warranty, freight, other, total_cost, margin, sub_total, gst, grand, grand*qty]
+}
+df = pd.DataFrame(data)
+st.dataframe(df, use_container_width=True)
+
+# Excel Download Button
+def to_excel(df):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='GeM Costing')
+    return output.getvalue()
+
+excel_file = to_excel(df)
+
+st.download_button(
+    label="📊 Download Excel File",
+    data=excel_file,
+    file_name=f"{bid_no.replace('/','_')}_costing_{grand}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
