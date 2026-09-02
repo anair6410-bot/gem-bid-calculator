@@ -2,10 +2,21 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.set_page_config(page_title="GeM Bid", page_icon="🇮🇳", layout="wide")
-st.title("🇮🇳 GeM Bid - 22 Components Costing")
+st.set_page_config(page_title="GeM Bid Pro", page_icon="🇮🇳", layout="wide")
 
-# YOUR 22 COMPONENTS ONLY
+# --- PREMIUM CSS ---
+st.markdown("""
+<style>
+   .main-header {background: linear-gradient(90deg, #0f172a 0%, #1e40af 100%); padding: 20px; border-radius: 15px; color: white; text-align: center; margin-bottom: 20px;}
+   .metric-card {background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #1e40af; text-align: center;}
+   .comp-card {background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px;}
+   .stNumberInput {background: white;}
+    div[data-testid="stSidebar"] {background-color: #f1f5f9;}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="main-header"><h1>🇮🇳 GeM Bid Pro - Premium Costing Tool</h1><p>Only 22 Components | Auto Pricing by Category</p></div>', unsafe_allow_html=True)
+
 COMPONENTS_22 = [
     "Processor CPU", "MB", "Graphics CARD", "OS", "RAM", "SSD",
     "SSD (SECONDARY)", "Cabinet LTR", "SMPS WATT", "ADAPTER",
@@ -14,85 +25,69 @@ COMPONENTS_22 = [
     "ANTIVIRUS", "DP PORT", "SERIAL COM PORT+PARALLEL", "Keyboard & Mouse"
 ]
 
-# AUTO PRICING BY YOUR SHEET LOGIC
 PRESETS = {
-    "Entry and Mid Level Desktop Computers": {
-        "Processor CPU": 10500, "MB": 3800, "Graphics CARD": 0, "OS": 600, "RAM": 4500, "SSD": 2500,
-        "SSD (SECONDARY)": 0, "Cabinet LTR": 1500, "SMPS WATT": 0, "ADAPTER": 0, "DVD WRITER": 0,
-        "MONITOR": 3800, "SPEAKER": 0, "WIRELESS + BLUETOOTH": 0, "MS OFFICE": 0, "CHASSIS SWITCH": 0,
-        "TPM 2.0": 700, "CAMERA": 0, "ANTIVIRUS": 0, "DP PORT": 0, "SERIAL COM PORT+PARALLEL": 0, "Keyboard & Mouse": 350
-    },
-    "High End Desktop Computer": {
-        "Processor CPU": 14500, "MB": 4250, "Graphics CARD": 0, "OS": 600, "RAM": 17500, "SSD": 3650,
-        "SSD (SECONDARY)": 11500, "Cabinet LTR": 1850, "SMPS WATT": 0, "ADAPTER": 0, "DVD WRITER": 0,
-        "MONITOR": 4450, "SPEAKER": 0, "WIRELESS + BLUETOOTH": 0, "MS OFFICE": 0, "CHASSIS SWITCH": 0,
-        "TPM 2.0": 700, "CAMERA": 0, "ANTIVIRUS": 0, "DP PORT": 0, "SERIAL COM PORT+PARALLEL": 0, "Keyboard & Mouse": 350
-    },
-    "All in One Desktop Computer": {
-        "Processor CPU": 16500, "MB": 5000, "Graphics CARD": 0, "OS": 600, "RAM": 8500, "SSD": 4500,
-        "SSD (SECONDARY)": 0, "Cabinet LTR": 0, "SMPS WATT": 0, "ADAPTER": 0, "DVD WRITER": 0,
-        "MONITOR": 0, "SPEAKER": 0, "WIRELESS + BLUETOOTH": 500, "MS OFFICE": 0, "CHASSIS SWITCH": 0,
-        "TPM 2.0": 700, "CAMERA": 500, "ANTIVIRUS": 0, "DP PORT": 0, "SERIAL COM PORT+PARALLEL": 0, "Keyboard & Mouse": 350
-    }
+    "Entry and Mid Level": {"Processor CPU": 10500, "MB": 3800, "Graphics CARD": 0, "OS": 600, "RAM": 4500, "SSD": 2500, "SSD (SECONDARY)": 0, "Cabinet LTR": 1500, "SMPS WATT": 0, "ADAPTER": 0, "DVD WRITER": 0, "MONITOR": 3800, "SPEAKER": 0, "WIRELESS + BLUETOOTH": 0, "MS OFFICE": 0, "CHASSIS SWITCH": 0, "TPM 2.0": 700, "CAMERA": 0, "ANTIVIRUS": 0, "DP PORT": 0, "SERIAL COM PORT+PARALLEL": 0, "Keyboard & Mouse": 350},
+    "High End Desktop": {"Processor CPU": 14500, "MB": 4250, "Graphics CARD": 0, "OS": 600, "RAM": 17500, "SSD": 3650, "SSD (SECONDARY)": 11500, "Cabinet LTR": 1850, "SMPS WATT": 0, "ADAPTER": 0, "DVD WRITER": 0, "MONITOR": 4450, "SPEAKER": 0, "WIRELESS + BLUETOOTH": 0, "MS OFFICE": 0, "CHASSIS SWITCH": 0, "TPM 2.0": 700, "CAMERA": 0, "ANTIVIRUS": 0, "DP PORT": 0, "SERIAL COM PORT+PARALLEL": 0, "Keyboard & Mouse": 350},
+    "All in One": {"Processor CPU": 16500, "MB": 5000, "Graphics CARD": 0, "OS": 600, "RAM": 8500, "SSD": 4500, "SSD (SECONDARY)": 0, "Cabinet LTR": 0, "SMPS WATT": 0, "ADAPTER": 0, "DVD WRITER": 0, "MONITOR": 0, "SPEAKER": 0, "WIRELESS + BLUETOOTH": 500, "MS OFFICE": 0, "CHASSIS SWITCH": 0, "TPM 2.0": 700, "CAMERA": 500, "ANTIVIRUS": 0, "DP PORT": 0, "SERIAL COM PORT+PARALLEL": 0, "Keyboard & Mouse": 350}
 }
 
 with st.sidebar:
-    st.header("📋 Bid Details")
+    st.image("https://upload.wikimedia.org/wikipedia/commons/7/7d/Government_e_Marketplace_Logo.png", width=150)
+    st.subheader("📋 Bid Info")
     bid_no = st.text_input("GEM BID NO", "GEM/2026/B/7936262")
-    dept = st.selectbox("🏛️ Department", ["DEPT OF FINANCIAL SERVICES","MINISTRY OF FINANCE","MINISTRY OF DEFENCE","SBI","PNB","INDIAN ARMY","INDIAN NAVY","OTHER"])
-    location = st.selectbox("📍 Location", ["DHANBAD","RANCHI","JAMSHEDPUR","KOLKATA","DELHI","MUMBAI","OTHER"])
-
-    # ITEM CATEGORY DROPDOWN
+    dept = st.selectbox("🏛️ Department", ["DEPT OF FINANCIAL SERVICES","SBI","PNB","ARMY","NAVY","OTHER"])
     category = st.selectbox("🖥️ Item Category", list(PRESETS.keys()), index=1)
-
-    # COMPONENT DROPDOWN - ONLY 22
-    selected_comp = st.selectbox("🔧 Select Component to Edit (22 List)", COMPONENTS_22)
-
+    focus_comp = st.selectbox("🔧 Focus Component (22 List)", COMPONENTS_22)
     qty = st.number_input("Quantity", 1, 1000, 65)
-
-st.info(f"Category: **{category}** | Editing: **{selected_comp}** | Showing all 22 components below with auto-price")
-
-# Get preset for category
-preset = PRESETS[category]
-total_cost = 0
-prices = {}
-
-col1, col2, col3 = st.columns(3)
-for i, comp in enumerate(COMPONENTS_22):
-    with [col1, col2, col3][i % 3]:
-        # Auto price from category
-        default_price = preset.get(comp, 0)
-        # Highlight selected component
-        if comp == selected_comp:
-            price = st.number_input(f"👉 {comp}", value=default_price, key=comp, help="Selected Component")
-        else:
-            price = st.number_input(f"{comp}", value=default_price, key=comp)
-        prices[comp] = price
-        total_cost += price
-
-with st.sidebar:
-    st.divider()
     margin = st.number_input("Company Margin", 4000)
+
+preset = PRESETS[category]
+prices = {}
+total_cost = 0
+
+tab1, tab2 = st.tabs(["💻 Components Costing (22 Only)", "📊 Summary & Export"])
+
+with tab1:
+    st.markdown(f"#### Category: **{category}** | Focus: **{focus_comp}**")
+    cols = st.columns(4)
+    for i, comp in enumerate(COMPONENTS_22):
+        with cols[i % 4]:
+            with st.container(border=True):
+                icon = "⭐" if comp == focus_comp else "🔹"
+                st.markdown(f"**{icon} {comp}**")
+                default = preset.get(comp, 0)
+                price = st.number_input(f"Price {comp}", value=default, label_visibility="collapsed", key=f"p_{comp}")
+                prices[comp] = price
+                total_cost += price
+                if price > 0:
+                    st.caption(f"₹{price:,}")
+
+with tab2:
     sub_total = total_cost + margin
     gst = int(sub_total * 0.18)
     grand = sub_total + gst
-    st.success(f"GRAND TOTAL: Rs. {grand}")
-    st.write(f"Total Bid: Rs. {grand*qty:,}")
+    total_bid = grand * qty
 
-# Summary
-st.divider()
-st.subheader(f"Costing Summary - {category}")
-df = pd.DataFrame(list(prices.items()), columns=["Component (22 Only)", "Price"])
-df.loc[len(df)] = ["TOTAL COST", total_cost]
-df.loc[len(df)] = ["Company Margin", margin]
-df.loc[len(df)] = ["GST 18%", gst]
-df.loc[len(df)] = ["GRAND TOTAL", grand]
-st.dataframe(df, use_container_width=True)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Total Cost", f"₹{total_cost:,}")
+    c2.metric("Sub Total", f"₹{sub_total:,}")
+    c3.metric("Grand Total", f"₹{grand:,}", delta="18% GST")
+    c4.metric("Total Bid Value", f"₹{total_bid:,}")
 
-def to_excel(df):
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False)
-    return output.getvalue()
+    st.divider()
+    colA, colB = st.columns([2,1])
+    with colA:
+        df = pd.DataFrame(list(prices.items()), columns=["Component", "Price"])
+        df = df[df["Price"] > 0]
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    with colB:
+        st.markdown("##### 📄 Bid Summary")
+        st.code(f"BID: {bid_no}\nDept: {dept}\nCategory: {category}\nQty: {qty}\nGrand: {grand}\nTotal: {total_bid:,}")
+        def to_excel(df_full):
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df_full.to_excel(writer, index=False)
+            return output.getvalue()
 
-st.download_button("📥 Download Excel - 22 Components", to_excel(df), file_name=f"GeM_Bid_{category[:4]}_{grand}.xlsx", use_container_width=True)
+        df_export = pd.DataFrame({"Item": list(prices.keys())+["Margin","GST","Grand Total"], "Value": list(prices.values())+[margin,gst,grand]})
+        st.download_button("📥 Download Premium Excel", to_excel(df_export), file_name=f"GeM_Premium_{category}_{grand}.xlsx", type="primary", use_container_width=True)
