@@ -2,19 +2,28 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.set_page_config(page_title="GeM Bid Costing Calculator", page_icon="🇮🇳", layout="wide")
-st.title("🇮🇳 GeM Bid Costing Calculator")
-st.caption("As per your Dhanbad Sheet - BID 7936262 - With Excel Export")
+st.set_page_config(page_title="GeM Bid Costing", page_icon="🇮🇳", layout="wide")
+st.title("🇮🇳 GeM Bid Costing Calculator - Desktop Computers")
+st.caption("BID 7936262 Logic - Grand Total 76,464")
 
-# Sidebar
+# Sidebar - Bid Details
 with st.sidebar:
     st.header("📋 Bid Details")
     bid_no = st.text_input("GEM BID NO", "GEM/2026/B/7936262")
     dept = st.text_input("Department", "DEPT OF FINANCIAL SERVICES")
-    location = st.text_input("Location", "DHANBAD")
+    
+    # LOCATION DROPDOWN
+    location = st.selectbox(
+        "📍 Select Location",
+        ["DHANBAD", "RANCHI", "JAMSHEDPUR", "BOKARO", "DEOGHAR", "HAZARIBAGH", "KOLKATA", "PATNA", "DELHI", "MUMBAI", "OTHER"],
+        index=0
+    )
+    if location == "OTHER":
+        location = st.text_input("Enter Custom Location", "DHANBAD")
+    
     qty = st.number_input("Quantity", 1, 1000, 65)
 
-# Costing
+# Main Costing
 col1, col2 = st.columns(2)
 with col1:
     st.subheader("Component Costing")
@@ -44,32 +53,32 @@ with col2:
     st.metric("SUB TOTAL", f"Rs. {sub_total}")
     st.metric("GST 18%", f"Rs. {gst}")
     st.success(f"### GRAND TOTAL = Rs. {grand}")
-    st.info(f"For {qty} Units = Rs. {grand*qty:,}")
+    st.info(f"For {qty} Units at {location} = Rs. {grand*qty:,}")
+    
+    if grand == 76464:
+        st.write("✅ Matched with your paper: 76464")
 
-# --- NEW EXCEL SAVE FEATURE ---
+# Excel Save Section
 st.divider()
-st.subheader("📥 Save Data to Excel")
+st.subheader(f"📊 Data Preview - {location}")
 
-# Create DataFrame like your image
 data = {
-    "Particulars": ["GEM BID NO", "Department", "Location", "Qty", "CPU i5 14400", "MB H610", "OS Win11 Pro", "RAM 16GB", "SSD 256GB", "SSD 1TB", "Cabinet", "Monitor", "TPM", "KBD Mouse", "Warranty", "Freight", "Other", "TOTAL COST", "Company Margin", "Sub Total", "GST 18%", "GRAND TOTAL (BID PRICE)", "Total Bid Value"],
-    "Value / Cost": [bid_no, dept, location, qty, cpu, mb, os_cost, ram, ssd1, ssd2, cabinet, monitor, tpm, kbd, warranty, freight, other, total_cost, margin, sub_total, gst, grand, grand*qty]
+    "Particulars": ["GEM BID NO", "Department", "Location", "Quantity", "TOTAL COST", "Company Margin", "Sub Total", "GST 18%", "GRAND TOTAL (BID PRICE)", "Total Bid Value"],
+    "Value": [bid_no, dept, location, qty, total_cost, margin, sub_total, gst, grand, grand*qty]
 }
 df = pd.DataFrame(data)
 st.dataframe(df, use_container_width=True)
 
-# Excel Download Button
 def to_excel(df):
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='GeM Costing')
+        df.to_excel(writer, index=False, sheet_name='Costing')
     return output.getvalue()
 
-excel_file = to_excel(df)
-
 st.download_button(
-    label="📊 Download Excel File",
-    data=excel_file,
-    file_name=f"{bid_no.replace('/','_')}_costing_{grand}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    label="📥 Download Excel File",
+    data=to_excel(df),
+    file_name=f"{location}_{grand}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    use_container_width=True
 )
